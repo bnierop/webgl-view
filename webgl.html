@@ -10,6 +10,7 @@
 	<script src="imageview.js"></script> 
 	
 	<script src="html.tag.js"></script> 
+	<script src="html.div.js"></script> 
 	<script src="html.img.js"></script> 
 	
 	<style>
@@ -50,7 +51,7 @@ $( document ).ready(function(){
 	// Declare a global variable for our sprite so that the animate function can access it.
 	var bunny = null;
 
-	var view = new View(300, 300, 500, 500);
+	var view = new View(width/2, height/2, width, height);
 	view.appendTo(stage);
 	view.setCenter(0.5);
 	
@@ -62,7 +63,7 @@ $( document ).ready(function(){
 	var spent = 0;
 
 	// rotations per second
-	var rps = 0.0001;
+	var rps = 0.001;
 	
 	function gameloop() {
 		requestAnimationFrame(gameloop);
@@ -90,12 +91,27 @@ $( document ).ready(function(){
 		var h = wnd.height();
 		renderer.resize(w, h);
 	}
-	
-	for(var i = 0; i < 10; i++){
-		var im = new Img();
-		view.append(im);
+
+	$.get('view.json', function(json){
+		var data = JSON.parse(json);
+		populate(view, data);
+	});
+
+	function populate(view, data){
+		var clazz = ucword(data.class);
+		var tag = new window[clazz]();
+		tag.setData(data);
+		view.append(tag);
+		for(var k in data.children){
+			var child = data.children[k];
+			populate(tag, child);
+		}
 	}
-	
+
+	function ucword(string) {
+    	return string.charAt(0).toUpperCase() + string.slice(1);
+	}
+
 	var fpsCounter = new PIXI.Text('60');
 	stage.addChild(fpsCounter);
 	gameloop();

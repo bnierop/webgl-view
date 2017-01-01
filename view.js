@@ -27,6 +27,10 @@ function View(x, y, width, height){
 			console.log('[' +self.name() + ']', msg);
 		});
 	}
+
+	this.setData = function(data){
+		this.data = data;
+	};
 	
 	this.create = function(){
 		
@@ -37,7 +41,7 @@ function View(x, y, width, height){
 
 		// set the line style to have a width of 5 and set the color to red
 		graphics.interactive = true;
-		graphics.hitArea = new PIXI.Rectangle(0, 0, this.width, this.height);
+		graphics.hitArea = new PIXI.Rectangle(0, 0, this.getWidth(), this.getHeight());
 		
 		function color(){
 			return Math.random() * 0xFFFFFF;
@@ -111,7 +115,7 @@ function View(x, y, width, height){
 			}
 		}
 		
-		graphics.drawRect(0,0,this.width, this.height);
+		graphics.drawRect(0,0,this.getWidth(), this.getHeight());
 		graphics.endFill();
 		this.graphics = graphics;
 		this.container.addChild(graphics);
@@ -136,11 +140,11 @@ function View(x, y, width, height){
 	
 	this.setCenter = function(x, y){
 		if(x && y){
-			this.container.pivot.x = this.width * x;
-			this.container.pivot.y = this.height * y;
+			this.container.pivot.x = this.getWidth() * x;
+			this.container.pivot.y = this.getHeight() * y;
 		}else if(x){
-			this.container.pivot.x = this.width * x;
-			this.container.pivot.y = this.height * x;
+			this.container.pivot.x = this.getWidth() * x;
+			this.container.pivot.y = this.getHeight() * x;
 		}
 	};
 	
@@ -155,13 +159,29 @@ function View(x, y, width, height){
 		this.graphics.clear();
 		this.graphics.beginFill(this.color);
 		this.graphics.lineStyle(this.border.width, 0x000000);
-		this.graphics.drawRect(0,0,this.width, this.height);
+		
+		var w = this.getWidth();
+		var h = this.getHeight();
+		this.graphics.drawRect(0,0, w, h);
 		this.graphics.endFill();
 		this.mask(force);
+	};
+
+	this.getWidth = function(){
+		if($.isNumeric(this.css.data.width))
+			return this.css.data.width;
+		return this.width;
+	};
+
+	this.getHeight = function(){
+		if($.isNumeric(this.css.data.height))
+			return this.css.data.height;
+		return this.height;
 	};
 	
 	this.setSize = function(width, height){
 		this.ready();
+		
 		if(width && height){
 			this.width = width;
 			this.height = height;
@@ -169,8 +189,8 @@ function View(x, y, width, height){
 			this.width = width;
 			this.height = width;
 		}
-		
-		var rectangle = new PIXI.Rectangle(0, 0, this.width, this.height);
+
+		var rectangle = new PIXI.Rectangle(0, 0, this.getWidth(), this.getHeight());
 		this.graphics.hitArea = rectangle;
 		this.render(true);
 	};
@@ -233,7 +253,7 @@ function View(x, y, width, height){
 		if(draw){
 			g.clear();
 			g.beginFill(0x0);
-			g.drawRect(0,0,this.width, this.height);
+			g.drawRect(0,0,this.getWidth(), this.getHeight());
 			g.endFill();
 		}
 	};
@@ -245,6 +265,8 @@ function View(x, y, width, height){
 		return this.css.data[key];
 	};
 	this.css.data = {};
+	this.css.data.width = 'inherit';
+	this.css.data.height = 'inherit';
 	
 	this.async = function(f){
 		setTimeout(f);

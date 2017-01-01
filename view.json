@@ -1,0 +1,21 @@
+{
+
+    "class": "div",
+    "width": 500,
+    "height": 500,
+    "children":[
+    	{
+            "class": "img",
+            "src": "https://images-na.ssl-images-amazon.com/images/I/51PP5pz2lEL._AC_UL320_SR224,320_.jpg"
+        },
+        {
+            "class": "img",
+            "src": "https://static.bose.com/etc/designs/bose/consumer-products-2016/design/images/bose_logo.png"
+        },
+        {
+            "class": "div",
+            "width": 200,
+            "height": 200
+        }
+    ]
+}

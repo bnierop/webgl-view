@@ -1,15 +1,13 @@
 function Img(){
 	
-	Tag.call(this, 0, 0, 100, 100);
+	Tag.call(this);
 	this.clazz = arguments.callee.name;
 	
 	var self = this;
 	
-	var url = 'https://images-na.ssl-images-amazon.com/images/I/51PP5pz2lEL._AC_UL320_SR224,320_.jpg'; 
-
 	this.apply = function(){
 		
-		var texture = PIXI.Texture.fromImage(url);
+		var texture = PIXI.Texture.fromImage(this.src);
 		var img = new PIXI.Sprite(texture);
 		
 		img.position.x = 0;
@@ -30,22 +28,33 @@ function Img(){
 				}
 			});
 		}
-		if(this.width == 0 && this.height == 0)
-			set();
+		set();
 		
 	}
+
+	var superSetData = this.setData;
+	this.setData = function(data){
+		superSetData(data);
+
+		if(data.src){
+			this.setSrc(data.src);
+		}
+
+	};
+
+	this.setSrc = function(url){
+		if(url){
+			this.src = url;
+			if(PIXI.loader.resources[url]){
+				this.async(function(){
+					self.apply();		
+				});
+			}else{
+				PIXI.loader.add(url, url).load(function (loader, resources) {
+					self.apply();
+				});
+			}
+		}
+	};
 	
-	//this.apply();
-	
-	//*
-	if(PIXI.loader.resources[url]){
-		this.async(function(){
-			self.apply();		
-		});
-	}else{
-		PIXI.loader.add(url, url).load(function (loader, resources) {
-			self.apply();
-		});
-	}
-//*/	
 }
