@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<script src="pixi.min.js"></script> 
+	<script src="jquery.min.js"></script> 
+	
+	<script src="view.js"></script> 
+	<script src="imageview.js"></script> 
+	
+	<script src="html.tag.js"></script> 
+	<script src="html.img.js"></script> 
+	
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			background: blue;
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+
+<script>
+
+$( document ).ready(function(){
+
+	var wnd = $(window);
+	var width = wnd.width();
+	var height = wnd.height();
+	
+	wnd.on('mousewheel DOMMouseScroll', function(event){
+		var delta = event.originalEvent.detail ? event.originalEvent.detail * -40 : event.originalEvent.wheelDelta;
+		var y = stage.position.y + delta;
+		stage.position.y = y <= 0 ? y : 0;
+		return false;
+	});
+
+	// You can use either `new PIXI.WebGLRenderer`, `new PIXI.CanvasRenderer`, or `PIXI.autoDetectRenderer`
+	var options = {antialias: true, transparent: true, resolution: 1};
+	var renderer = new PIXI.WebGLRenderer(width, height, options);
+
+	document.body.appendChild(renderer.view);
+
+	// You need to create a root container that will hold the scene you want to draw.
+	var stage = new PIXI.Container(0x00ffffff, true);
+
+	// Declare a global variable for our sprite so that the animate function can access it.
+	var bunny = null;
+
+	var view = new View(300, 300, 500, 500);
+	view.appendTo(stage);
+	view.setCenter(0.5);
+	
+	var time = new Date().getTime();
+	var fps = 0;
+	
+	// frames rendered, spent time
+	var frames = 0;
+	var spent = 0;
+
+	// rotations per second
+	var rps = 0.0001;
+	
+	function gameloop() {
+		requestAnimationFrame(gameloop);
+		renderer.render(stage);
+
+		var now =  new Date().getTime();
+		var interval = now - time;
+		time = now;
+		
+		fps = 1000 / interval;
+		spent += fps;
+		frames++;
+
+		view.update();
+		
+		var angle = ((Math.PI * 2) / fps) * rps;
+		view.rotate(angle);
+		
+		fpsCounter.text = (Math.round((spent / frames) * 100) / 100) + ' / ' + frames + ' frames';
+	}
+	
+	wnd.resize(resize);
+	function resize() {
+		var w = wnd.width();
+		var h = wnd.height();
+		renderer.resize(w, h);
+	}
+	
+	for(var i = 0; i < 10; i++){
+		var im = new Img();
+		view.append(im);
+	}
+	
+	var fpsCounter = new PIXI.Text('60');
+	stage.addChild(fpsCounter);
+	gameloop();
+	
+});
+
+</script>
+
+</body>
+</html>
