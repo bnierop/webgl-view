@@ -14,8 +14,14 @@
         },
         {
             "class": "div",
-            "width": 200,
-            "height": 200
+            "width": 400,
+            "height": 400,
+            "children": [
+                {
+                    "class": "img",
+                    "src": "https://i.vimeocdn.com/portrait/7668925_300x300"
+                }
+            ]
         }
     ]
 }
