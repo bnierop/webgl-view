@@ -1,4 +1,5 @@
 var id = 0;
+var focus = null;
 function View(x, y, width, height){
 	
 	var self = this;
@@ -13,7 +14,17 @@ function View(x, y, width, height){
 	this.id = id++;
 	
 	this.border = {
-		width: 22
+		left: NaN,
+		right: NaN,
+		top: NaN,
+		bottom: NaN
+	};
+
+	this.padding = {
+		left: NaN,
+		right: NaN,
+		top: NaN,
+		bottom: NaN
 	};
 
 	this.clazz = arguments.callee.name;
@@ -28,20 +39,28 @@ function View(x, y, width, height){
 		});
 	}
 
-	this.setData = function(data){
-		this.data = data;
+	self.data = {};
+	self.setData = function(data){
+		console.log('setdata', data);
+		self.data = data;
+	};
+
+	self.getPaddingLeft = function(){
+		
+		if(isNaN(self.padding.left)){
+			var style = self.data.style;
+			if(style){
+				console.log(style);
+			}
+			return 0;
+		}
 	};
 	
 	this.create = function(){
 		
-		var self = this;
 		var graphics = new PIXI.Graphics();
-		graphics.beginFill(this.color);
-		//graphics.fillAlpha = 0.5;
-
-		// set the line style to have a width of 5 and set the color to red
 		graphics.interactive = true;
-		graphics.hitArea = new PIXI.Rectangle(0, 0, this.getWidth(), this.getHeight());
+		// graphics.hitArea = new PIXI.Rectangle(0, 0, this.getWidth(), this.getHeight());
 		
 		function color(){
 			return Math.random() * 0xFFFFFF;
@@ -54,6 +73,7 @@ function View(x, y, width, height){
 		}
 		
 		graphics.mouseover = function(mouseData){
+			focus = self;
 			self.setColor(color());
 			if(self.mouseover)
 				self.mouseover();
@@ -76,7 +96,9 @@ function View(x, y, width, height){
         .on('touchendoutside', onDragEnd)
         // events for drag move
         .on('mousemove', onDragMove)
-        .on('touchmove', onDragMove);
+        .on('touchmove', onDragMove)
+		;
+
 		
 		function onDragStart(event){
 			
@@ -94,6 +116,8 @@ function View(x, y, width, height){
 		
 		function onDragMove(event){
 			if (this.dragging){
+				
+				//*
 				var newPosition = event.data.getLocalPosition(self.container.parent);
 				self.x = newPosition.x - this.start.x;
 				self.y = newPosition.y - this.start.y;
@@ -112,9 +136,12 @@ function View(x, y, width, height){
 						self.y = may;
 					
 				}
+				//*/
 			}
 		}
 		
+		graphics.beginFill(this.color);
+		//graphics.fillAlpha = 0.5;
 		graphics.drawRect(0,0,this.getWidth(), this.getHeight());
 		graphics.endFill();
 		this.graphics = graphics;
@@ -165,6 +192,11 @@ function View(x, y, width, height){
 		this.graphics.drawRect(0,0, w, h);
 		this.graphics.endFill();
 		this.mask(force);
+
+		for(var k in self.children){
+			var child = self.children[k];
+			child.render(force);
+		}
 	};
 
 	this.getWidth = function(){
@@ -203,8 +235,22 @@ function View(x, y, width, height){
 			var child = this.children[key];
 			child.update();
 		}
+		this.render();
 	};
-	
+
+	this.mousewheel = function(e){
+		//console.log('Mousewheel', self.clazz);
+		self.bubble(e);
+		return false;
+	};
+
+	this.bubble = function(e){
+		var name = e.type;
+		if(self.parent)
+			if(self.parent[name])
+				self.parent[name](e);
+	}
+
 	this.ready = function(){
 		if(!this.graphics)
 			this.create();
@@ -214,21 +260,28 @@ function View(x, y, width, height){
 		this.ready();
 		stage.addChild(this.container);
 	};
+
+	this.layout = function(){
+		for(var k in self.children){
+			var child = self.children[k];
+			//console.log('Layout', child);
+		}
+	};
 	
 	this.append = function( subview ){
-		
 		// if it is a subclass of View
 		if(subview.ready){
 			subview.ready();
-			subview.parent = this;
-			this.container.addChild(subview.container);
-			this.children.push(subview);
-			
+			subview.parent = self;
+			self.container.addChild(subview.container);
+			self.children.push(subview);
 		// if it is a PIXI class
 		}else if(subview.position){
-			subview.mask = this.mask.clip;
-			this.container.addChild(subview);
+			//subview.mask = self.graphics;
+			self.container.addChild(subview);
 		}
+
+		self.async(self.layout);
 	};
 	
 	this.mask = function( force ){
@@ -237,15 +290,15 @@ function View(x, y, width, height){
 		var draw = false;
 		
 		// a clipping area is not set
-		if(!this.mask.clip){
+		if(!this.maskClip){
 			g = new PIXI.Graphics();
-			this.mask.clip = g;
-			this.append(this.mask.clip);
+			this.maskClip = g;
+			this.append(this.maskClip);
 			draw = true;
 			
 		// if clipping is forced
 		}else if(force){
-			g = this.mask.clip;
+			g = this.maskClip;
 			draw = true;
 		}
 		
@@ -256,7 +309,29 @@ function View(x, y, width, height){
 			g.drawRect(0,0,this.getWidth(), this.getHeight());
 			g.endFill();
 		}
+
+		if(g)
+			self.container.mask = g;
 	};
+
+	this.clip = function(){
+		if(this.mask.clip);
+			return this.mask.clip;
+		return null;
+	};
+
+	this.scale = function(value){
+		if(value){
+			this.scale.value = value;
+			this.async(function(){
+				self.container.scale.x = value;
+				self.container.scale.y = value;
+			});
+		}
+
+		return this.scale.value;
+	};
+	this.scale.value = 1;
 	
 	this.css = function(key, value){
 		if(value){
@@ -268,8 +343,8 @@ function View(x, y, width, height){
 	this.css.data.width = 'inherit';
 	this.css.data.height = 'inherit';
 	
-	this.async = function(f){
-		setTimeout(f);
+	this.async = function(f, arg0, arg1, arg2){
+		setTimeout(f, 0, arg0, arg1, arg2);
 	};
 
 	this.setSize(width, height);

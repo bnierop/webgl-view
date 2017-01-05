@@ -29,7 +29,8 @@ function Img(){
 			});
 		}
 		set();
-		
+
+		img.mask = self.graphics;
 	}
 
 	var superSetData = this.setData;
